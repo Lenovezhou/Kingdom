@@ -93,7 +93,7 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 			//i*Panel_show10.transform.GetChild (i).GetComponent<RectTransform>().rect.width；也可以
 
 			Panel_show10.transform.GetChild (i).localPosition = new Vector3 ((i)* parentwidth,0,0);
-				
+			
 		}
 
 
@@ -109,6 +109,7 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 				itemschange change=toggles[i].gameObject.AddComponent<itemschange> ();
 				change.uimanager = this;
 				toggles[i].onValueChanged.AddListener (OnToggle);
+
 			}
 
 
@@ -118,6 +119,12 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 //			toggles [i].transform.localPosition += new Vector3 (i*equalsL,0f,0f);
 //			toggles [i].GetComponent<RectTransform> ().sizeDelta = new Vector2 (equalsL,bottompanel.GetComponent<RectTransform>().rect.height);
 
+		}
+
+		//初始化字典：
+		for (int i = 0; i <  toggles.Length; i++)
+		{
+			panel_toggle.Add (toggles[i].gameObject,Panel_show10.transform.GetChild(i).gameObject);
 		}
 
 		//初始化状态为选中第三个按钮
@@ -197,7 +204,8 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 //		Debug.Log (deltaX);
 		Panel_show10.transform.localPosition +=new Vector3(eventData.delta.x,0f,0f);
 	}
-
+	int tempnum=3;
+	const int a = 1;
 	/// <summary>
 	/// 弹起时完成剩下动作
 	/// </summary>
@@ -208,13 +216,17 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 		Vector3 tempdestination = templerp;
 		if (deltaX > 10f) {
 			tempdestination += new Vector3 ((parentwidth), 0, 0);
-
+			tempnum += a;
 			//Bottomitems (toggles[(int)(Mathf.Abs(templerp.x/parentwidth))].gameObject,morethan);
-			Debug.Log ((int)(Mathf.Abs(templerp.x/parentwidth))+"   "+templerp.x);
+
 		} else if (deltaX < -20f) {
 			tempdestination -= new Vector3 ((parentwidth), 0, 0);
+			tempnum -= a;
 		} 
-		switch ((int)(Mathf.Abs(tempdestination.x/parentwidth))) 
+
+	//	Bottomitems (toggles[tempnum].gameObject,morethan);
+		Debug.Log ((int)(Mathf.Abs(templerp.x/parentwidth))+"   "+templerp.x);
+		switch ((int)(Mathf.Abs(tempdestination.x/parentwidth))-1) 
 		{
 
 			case 0:
