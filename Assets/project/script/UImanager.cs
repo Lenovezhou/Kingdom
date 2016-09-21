@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// Panel_show10下的子物体将接受控制，bottompanel的子物体只确定前进多少格距离（注意命名），所以：
@@ -16,10 +17,11 @@ using System.Collections.Generic;
 
 public enum togglechange
 {
-	toggle0,toggle1,toggle2,toggle3,toggle4,none
+	toggle0=0,toggle1=1,toggle2=2,toggle3=3,toggle4=4,none
 }
 
-public class UImanager : MonoBehaviour {
+public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointerUpHandler {
+	
 	//toggle与panel对应字典
 	public Dictionary<GameObject,GameObject> panel_toggle=new Dictionary<GameObject, GameObject>();
 	//每个panel对应的状态
@@ -32,7 +34,9 @@ public class UImanager : MonoBehaviour {
 
 	private GameObject bottompanel,Panel_show10;
 
-
+	//每帧在X轴的偏移量
+	private float deltaX;
+	private bool isdrag=false;
 
 	private Toggle[] toggles;
 	private GameObject current;
@@ -44,13 +48,25 @@ public class UImanager : MonoBehaviour {
 	private Vector2 morethan,normal;
 	private float scaletitle=1.5f,equalsL;
 
+	//底部菜单的高度
+	private float BottomItemsHigh;
+	//lerp时间
+	private float lerptimer=0.15f;
+
+	private float distance = 0.5f;
+	private Vector2 startpos;
 
 	void Start ()
 	{
+
+
+		startpos =new Vector2(transform.localPosition.x,transform.position.y);
 		
 		Panel_show10 = transform.FindChild ("Panel_show10").gameObject;
 		bottompanel = transform.FindChild ("Panel_bottom").gameObject;
 		BackgroundImage = bottompanel.transform.FindChild ("BackImage").gameObject;
+
+		BottomItemsHigh = bottompanel.GetComponent<RectTransform> ().rect.height;
 
 		GridLayoutGroup bottomglg = bottompanel.GetComponent<GridLayoutGroup> ();
 
@@ -107,7 +123,7 @@ public class UImanager : MonoBehaviour {
 		//初始化状态为选中第三个按钮
 		uimanagertogglechange = togglechange.toggle2;
 		current = toggles [0].gameObject;
-		Debug.Log ("          "+current.name);
+	//	Debug.Log ("          "+current.name);
 		//Panel_show10.transform.localPosition = Vector3.zero;
 		templerp = Panel_show10.transform.localPosition;
 	}
@@ -129,28 +145,27 @@ public class UImanager : MonoBehaviour {
 
 	void LateUpdate()
 	{
-		Panel_show10.transform.localPosition = Vector3.Lerp (
-			Panel_show10.transform.localPosition,
-			templerp, 0.25f
-		);
-		//		Debug.Log (Panel_show10.transform.localPosition +"        "+templerp);
+		if (!isdrag) {
+			Panel_show10.transform.localPosition = Vector3.Lerp (
+				Panel_show10.transform.localPosition,
+				templerp, lerptimer);
 			
-
+		}
 	}
 
 	public void Bottomitems(GameObject presed,Vector2 morethan)
 	{
-
+	//	Debug.Log (presed.name);
 		//修改位置及宽度
 		for (int i = 0; i < toggles.Length; i++) 
 		{
 			//先修改大小
 			if (presed.name.Equals (toggles [i].name)) {
-				toggles [i].GetComponent<RectTransform> ().sizeDelta = new Vector2 (scaletitle * equalsL,
-					bottompanel.GetComponent<RectTransform> ().rect.height);
+				toggles [i].GetComponent<RectTransform> ().sizeDelta = Vector2.Lerp(toggles [i].GetComponent<RectTransform> ().sizeDelta
+					, new Vector2 (scaletitle * equalsL,BottomItemsHigh),lerptimer);
 			} else {
-				toggles [i].GetComponent<RectTransform> ().sizeDelta = new Vector2 ( equalsL,
-					bottompanel.GetComponent<RectTransform> ().rect.height);
+				toggles [i].GetComponent<RectTransform> ().sizeDelta = Vector2.Lerp(toggles [i].GetComponent<RectTransform> ().sizeDelta,
+					new Vector2 ( equalsL,BottomItemsHigh),lerptimer);
 			}
 			//根据大小修改位置
 			if (i != 0) {
@@ -161,7 +176,7 @@ public class UImanager : MonoBehaviour {
 			}
 		}
 		//修改bottompanel的items背景位置
-		BackgroundImage.transform.localPosition=Vector3.Lerp(BackgroundImage.transform.localPosition,presed.transform.localPosition,0.25f);
+		BackgroundImage.transform.localPosition=Vector3.Lerp(BackgroundImage.transform.localPosition,presed.transform.localPosition,lerptimer);
 
 	}
 
@@ -171,6 +186,68 @@ public class UImanager : MonoBehaviour {
 //		Debug.Log (this.gameObject.name);
 	}
 
+	/// <summary>
+	/// 拖动实现,eventData.delta.x每帧在X轴上的偏移量
+	/// </summary>
+	/// <param name="eventData">Event data.</param>
+
+	public void OnDrag (PointerEventData eventData)
+	{
+		deltaX = eventData.delta.x;
+//		Debug.Log (deltaX);
+		Panel_show10.transform.localPosition +=new Vector3(eventData.delta.x,0f,0f);
+	}
+
+	/// <summary>
+	/// 弹起时完成剩下动作
+	/// </summary>
+	/// <param name="eventData">Event data.</param>
+	public void OnPointerUp (PointerEventData eventData)
+	{
+		isdrag = false;
+		Vector3 tempdestination = templerp;
+		if (deltaX > 10f) {
+			tempdestination += new Vector3 ((parentwidth), 0, 0);
+
+			//Bottomitems (toggles[(int)(Mathf.Abs(templerp.x/parentwidth))].gameObject,morethan);
+			Debug.Log ((int)(Mathf.Abs(templerp.x/parentwidth))+"   "+templerp.x);
+		} else if (deltaX < -20f) {
+			tempdestination -= new Vector3 ((parentwidth), 0, 0);
+		} 
+		switch ((int)(Mathf.Abs(tempdestination.x/parentwidth))) 
+		{
+
+			case 0:
+				uimanagertogglechange = togglechange.toggle0;
+				break;
+			case 1:
+				uimanagertogglechange = togglechange.toggle1;
+				break;
+			case 2:
+				uimanagertogglechange = togglechange.toggle2;
+				break;
+			case 3:
+				uimanagertogglechange = togglechange.toggle3;
+				break;
+			case 4:
+				uimanagertogglechange = togglechange.toggle4;
+				break;
+			default:
+				break;
+		}
+	}
+
+
+	/// <summary>
+	/// 跟新每次按下时的初始位置
+	/// </summary>
+	/// <param name="eventData">Event data.</param>
+	public void OnPointerDown (PointerEventData eventData)
+	{
+		isdrag = true;
+		deltaX = 0f;
+		//startpos = eventData.position;
+	}
 
 
 	// Update is called once per frame
