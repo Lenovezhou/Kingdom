@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 
 /// <summary>
 /// Panel_show10下的子物体将接受控制，bottompanel的子物体只确定前进多少格距离（注意命名），所以：
+/// 最好不要通过名字去控制，方法的参数尽量简单，通用
 /// bottompanel与Panel_show10子物体的数量应相等添加时，先在枚举togglechange中添加状态，在再UImanager的UPdate
 /// 和itemschange中添加对应状态
 /// 在界面调整时，要将Panel_show10子UI的中心点放在（0.5，0.5）；
@@ -85,20 +86,11 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 
 		destinations = new Vector3[Panel_show10.transform.childCount];
 
-//		morethan =new Vector2( bottompanel.transform.GetChild (0).GetComponent<RectTransform> ().rect.size.x+50f,
-//			bottompanel.transform.GetChild (0).GetComponent<RectTransform> ().rect.size.y);
-//		normal =new Vector2((bottompanel.GetComponent<RectTransform>().rect.width - morethan.x) / 4,
-//			bottompanel.GetComponent<RectTransform>().rect.height);
-	
 		//不使用Gridlayout初始化Panel_show10子物体
 		for (int i = 0; i < Panel_show10.transform.childCount; i++) 
 		{
-			//Panel_show10.的rect的宽度与GetChild (i)的宽度不同时，只能使用自己的宽度初始化
-			//i*Panel_show10.transform.GetChild (i).GetComponent<RectTransform>().rect.width；也可以
-
 			Panel_show10.transform.GetChild (i).localPosition = new Vector3 ((i)* parentwidth,0,0);
 			destinations [i] = new Vector3 ((i) * parentwidth, Panel_show10.transform.localPosition.y, 0);
-		//	Debug.Log (	destinations[i]);
 		}
 
 
@@ -117,13 +109,6 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 
 			}
 
-
-
-
-
-//			toggles [i].transform.localPosition += new Vector3 (i*equalsL,0f,0f);
-//			toggles [i].GetComponent<RectTransform> ().sizeDelta = new Vector2 (equalsL,bottompanel.GetComponent<RectTransform>().rect.height);
-
 		}
 
 		//初始化字典：
@@ -135,8 +120,6 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 		//初始化状态为选中第三个按钮
 		uimanagertogglechange = togglechange.toggle2;
 		current = toggles [0].gameObject;
-	//	Debug.Log ("          "+current.name);
-		//Panel_show10.transform.localPosition = Vector3.zero;
 		templerp = Panel_show10.transform.localPosition;
 	}
 
@@ -153,13 +136,11 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 			Panel_show10.transform.localPosition = Vector3.Lerp (
 				Panel_show10.transform.localPosition,
 				templerp, lerptimer);
-		//	Debug.Log (Panel_show10.transform.localPosition);
 		}
 	}
 
 	public void Bottomitems(GameObject presed,Vector2 morethan)
 	{
-	//	Debug.Log (presed.name);
 		//修改位置及宽度
 		for (int i = 0; i < toggles.Length; i++) 
 		{
@@ -210,22 +191,25 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 	public void OnPointerUp (PointerEventData eventData)
 	{
 		isdrag = false;
-		Vector3 tempdestination = templerp;
+		Vector3 tempdestination = startpos-eventData.position;
+//		Debug.Log (Vector3.Magnitude(tempdestination)+"/////"+deltaX);
 		if (nowpanle>=0 && nowpanle<=4) {
-			if (deltaX > 10f) {
+			if (deltaX > 10f ||(deltaX > 1f&& Vector3.Distance(startpos,eventData.position)>300f)) {
 				nowpanle --;
-			} else if (deltaX < -10f) {
+			} 
+			if (deltaX < -10f||(deltaX<-1f&& Vector3.Distance(startpos,eventData.position)>300f)) {
 				nowpanle ++;
 			} 
 		}
 
 
 	//	Bottomitems (toggles[tempnum].gameObject,morethan);
-		Debug.Log (nowpanle+"-----"+deltaX);
+//		Debug.Log (nowpanle+"-----"+deltaX);
 		switch (nowpanle) 
 		{
 
 			case 0:
+			case -1:
 				uimanagertogglechange = togglechange.toggle0;
 				break;
 			case 1:
@@ -238,6 +222,7 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 				uimanagertogglechange = togglechange.toggle3;
 				break;
 			case 4:
+			case 5:
 				uimanagertogglechange = togglechange.toggle4;
 				break;
 			default:
@@ -254,15 +239,13 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 	{
 		isdrag = true;
 		deltaX = 0f;
-		//startpos = eventData.position;
+		startpos = eventData.position;
 	}
 
 
-	// Update is called once per frame
 	void Update () 
 	{
 		
-	//	Debug.Log ("first" + uimanagertogglechange.ToString ());
 		switch (uimanagertogglechange) {
 		case togglechange.none:
 			for (int i = 0; i < toggles.Length; i++) {
@@ -270,63 +253,23 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 			}
 			break;
 		case togglechange.toggle0:
-//			toggles [0].gameObject.transform.localScale = new Vector3 (1.1f, 1.1f, 1.1f);
-//			for (int i = 1; i < toggles.Length; i++) {
-//				toggles [i].gameObject.transform.localScale = new Vector3 (1f, 1f, 1f);
-//			}
 			Bottomitems (toggles[0].gameObject,morethan);
 			LerpPanel (0);
 			break;
 		case togglechange.toggle1:
-//			toggles [1].gameObject.transform.localScale = new Vector3 (1.1f,1.1f,1.1f);
-//			for (int i = 0; i < toggles.Length; i++) 
-//			{
-//				if (i != 1) {
-//					toggles [i].gameObject.transform.localScale = new Vector3 (1f,1f,1f);
-//				}
-//			}
 			Bottomitems (toggles[1].gameObject,morethan);
 			LerpPanel (1);
 			break;
 		
 		case togglechange.toggle2:
-//			toggles [2].gameObject.transform.localScale = new Vector3 (1.1f, 1.1f, 1.1f);
-//			for (int i = 0; i < toggles.Length; i++) {
-//				if (i != 2) 
-//				{
-//					toggles [i].gameObject.GetComponent<RectTransform> ().rect.size = new Vector2 (
-//					
-//					);
-//					//toggles [i].gameObject.transform.localScale = new Vector3 (1f, 1f, 1f);
-//			
-//				}
-//			}
 			Bottomitems (toggles[2].gameObject,morethan);
 			LerpPanel (2);
 			break;
 		case togglechange.toggle3:
-//			toggles [3].gameObject.transform.localScale = new Vector3 (1.1f,1.1f,1.1f);
-//			for (int i = 0; i < toggles.Length; i++) 
-//			{
-//				if (i != 3)
-//				{
-//					toggles [i].gameObject.transform.localScale = new Vector3 (1f,1f,1f);
-//				}
-//
-//			}
 			Bottomitems (toggles[3].gameObject,morethan);
 			LerpPanel (3);
 			break;
 		case togglechange.toggle4:
-//			toggles [4].gameObject.transform.localScale = new Vector3 (1.1f,1.1f,1.1f);
-//			for (int i = 0; i < toggles.Length; i++) 
-//			{
-//				if (i != 4)
-//				{
-//					toggles [i].gameObject.transform.localScale = new Vector3 (1f,1f,1f);
-//				}
-//
-//			}
 			Bottomitems (toggles[4].gameObject,morethan);
 			LerpPanel (4);
 			break;
