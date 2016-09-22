@@ -56,6 +56,10 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 	private float distance = 0.5f;
 	private Vector2 startpos;
 
+	private Vector3[] destinations;
+
+	private int nowpanle;
+
 	void Start ()
 	{
 
@@ -79,7 +83,7 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 
 		parentwidth = Panel_show10.transform.GetChild(0).GetComponent<RectTransform> ().rect.size.x;
 
-
+		destinations = new Vector3[Panel_show10.transform.childCount];
 
 //		morethan =new Vector2( bottompanel.transform.GetChild (0).GetComponent<RectTransform> ().rect.size.x+50f,
 //			bottompanel.transform.GetChild (0).GetComponent<RectTransform> ().rect.size.y);
@@ -93,7 +97,8 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 			//i*Panel_show10.transform.GetChild (i).GetComponent<RectTransform>().rect.width；也可以
 
 			Panel_show10.transform.GetChild (i).localPosition = new Vector3 ((i)* parentwidth,0,0);
-			
+			destinations [i] = new Vector3 ((i) * parentwidth, Panel_show10.transform.localPosition.y, 0);
+		//	Debug.Log (	destinations[i]);
 		}
 
 
@@ -135,19 +140,11 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 		templerp = Panel_show10.transform.localPosition;
 	}
 
-	public void LerpPanel(GameObject currentpanel)
+	public void LerpPanel(int currentpanel)
 	{
-		
-		if ((int.Parse(currentpanel.name.Substring(6,1))-
-			(int.Parse(current.name.Substring(6,1))) == 0)) {
-			return;
-		}
-		int a = int.Parse (currentpanel.name.Substring (6, 1));
-		int b = int.Parse(current.name.Substring(6,1));
-		templerp= Panel_show10.transform.localPosition - 
-			(new Vector3((a-b)*(parentwidth), 
-			0,0));
-		current=currentpanel;
+		templerp =new Vector3(-destinations [currentpanel].x,destinations[currentpanel].y,0f);
+		current=toggles[currentpanel].gameObject;
+		nowpanle = currentpanel;
 	}
 
 	void LateUpdate()
@@ -156,7 +153,7 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 			Panel_show10.transform.localPosition = Vector3.Lerp (
 				Panel_show10.transform.localPosition,
 				templerp, lerptimer);
-			
+		//	Debug.Log (Panel_show10.transform.localPosition);
 		}
 	}
 
@@ -214,19 +211,18 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 	{
 		isdrag = false;
 		Vector3 tempdestination = templerp;
-		if (deltaX > 10f) {
-			tempdestination += new Vector3 ((parentwidth), 0, 0);
-			tempnum += a;
-			//Bottomitems (toggles[(int)(Mathf.Abs(templerp.x/parentwidth))].gameObject,morethan);
+		if (nowpanle>=0 && nowpanle<=4) {
+			if (deltaX > 10f) {
+				nowpanle --;
+			} else if (deltaX < -10f) {
+				nowpanle ++;
+			} 
+		}
 
-		} else if (deltaX < -20f) {
-			tempdestination -= new Vector3 ((parentwidth), 0, 0);
-			tempnum -= a;
-		} 
 
 	//	Bottomitems (toggles[tempnum].gameObject,morethan);
-		Debug.Log ((int)(Mathf.Abs(templerp.x/parentwidth))+"   "+templerp.x);
-		switch ((int)(Mathf.Abs(tempdestination.x/parentwidth))-1) 
+		Debug.Log (nowpanle+"-----"+deltaX);
+		switch (nowpanle) 
 		{
 
 			case 0:
@@ -279,7 +275,7 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 //				toggles [i].gameObject.transform.localScale = new Vector3 (1f, 1f, 1f);
 //			}
 			Bottomitems (toggles[0].gameObject,morethan);
-			LerpPanel (toggles[0].gameObject);
+			LerpPanel (0);
 			break;
 		case togglechange.toggle1:
 //			toggles [1].gameObject.transform.localScale = new Vector3 (1.1f,1.1f,1.1f);
@@ -290,7 +286,7 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 //				}
 //			}
 			Bottomitems (toggles[1].gameObject,morethan);
-			LerpPanel (toggles[1].gameObject);
+			LerpPanel (1);
 			break;
 		
 		case togglechange.toggle2:
@@ -306,7 +302,7 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 //				}
 //			}
 			Bottomitems (toggles[2].gameObject,morethan);
-			LerpPanel (toggles[2].gameObject);
+			LerpPanel (2);
 			break;
 		case togglechange.toggle3:
 //			toggles [3].gameObject.transform.localScale = new Vector3 (1.1f,1.1f,1.1f);
@@ -319,7 +315,7 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 //
 //			}
 			Bottomitems (toggles[3].gameObject,morethan);
-			LerpPanel (toggles[3].gameObject);
+			LerpPanel (3);
 			break;
 		case togglechange.toggle4:
 //			toggles [4].gameObject.transform.localScale = new Vector3 (1.1f,1.1f,1.1f);
@@ -332,7 +328,7 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 //
 //			}
 			Bottomitems (toggles[4].gameObject,morethan);
-			LerpPanel (toggles[4].gameObject);
+			LerpPanel (4);
 			break;
 		}
 	}
