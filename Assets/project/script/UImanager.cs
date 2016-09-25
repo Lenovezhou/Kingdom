@@ -33,11 +33,11 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 	//改变Panel_show10的cell宽度
 	public float Panel_show10cellX;
 
-	private GameObject bottompanel,Panel_show10;
+	public GameObject bottompanel,Panel_show10;
 
 	//每帧在X轴的偏移量
-	private float deltaX;
-	private bool isdrag=false;
+	public float deltaX;
+	public bool isdrag=false;
 
 	private Toggle[] toggles;
 	private GameObject current;
@@ -54,22 +54,23 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 	//lerp时间
 	private float lerptimer=0.15f;
 
-	private float distance = 0.5f;
-	private Vector2 startpos;
+	public Vector2 startpos;
 
 	private Vector3[] destinations;
 
-	private int nowpanle;
+	public int nowpanle;
 
 
 
-	void Start ()
+	 void Awake ()
+		{
+		Inite ();
+		}
+	public void Inite()
 	{
-
-
 		startpos =new Vector2(transform.localPosition.x,transform.position.y);
-		
-		Panel_show10 = transform.FindChild ("Panel_show10").gameObject;
+
+		Panel_show10 = transform.FindChild ("Panel_show0").gameObject;
 		bottompanel = transform.FindChild ("Panel_bottom").gameObject;
 		BackgroundImage = bottompanel.transform.FindChild ("BackImage").gameObject;
 
@@ -111,17 +112,16 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 		}
 		equalsL = (bottompanel.GetComponent<RectTransform> ().rect.width) / (toggles.Length - 1 + scaletitle);
 		//初始化字典：
-//		for (int i = 0; i <  toggles.Length; i++)
-//		{
-//			panel_toggle.Add (toggles[i].gameObject,Panel_show10.transform.GetChild(i).gameObject);
-//		}
+		//		for (int i = 0; i <  toggles.Length; i++)
+		//		{
+		//			panel_toggle.Add (toggles[i].gameObject,Panel_show10.transform.GetChild(i).gameObject);
+		//		}
 
 		//初始化状态为选中第三个按钮
 		uimanagertogglechange = togglechange.toggle2;
 		current = toggles [0].gameObject;
 		templerp = Panel_show10.transform.localPosition;
 	}
-
 	public void LerpPanel(int currentpanel)
 	{
 		templerp =new Vector3(-destinations [currentpanel].x,destinations[currentpanel].y,0f);
@@ -154,17 +154,12 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 
 	void LateUpdate()
 	{
-		if (!isdrag) {
+		if (!isdrag && Panel_show10) {
 			Panel_show10.transform.localPosition = Vector3.Lerp (
 				Panel_show10.transform.localPosition,
 				templerp, lerptimer);
 		}
 	}
-
-	public void Bottomitems(GameObject presed,Vector2 morethan)
-	{
-		}
-
 
 	public void OnToggle(bool ison)
 	{
