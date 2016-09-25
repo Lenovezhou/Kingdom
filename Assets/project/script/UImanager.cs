@@ -24,10 +24,10 @@ public enum togglechange
 public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointerUpHandler {
 	
 	//toggle与panel对应字典
-	public Dictionary<GameObject,GameObject> panel_toggle=new Dictionary<GameObject, GameObject>();
+//	public Dictionary<GameObject,GameObject> panel_toggle=new Dictionary<GameObject, GameObject>();
 	//每个panel对应的状态
-	public togglechange uimanagertogglechange=togglechange.none;
-	public string togglename;
+	[HideInInspector]
+	public togglechange uimanagertogglechange;
 	//调整间隔
 	public float Panel_show10Xspeacing,Panel_show10cellYspeacing;
 	//改变Panel_show10的cell宽度
@@ -46,7 +46,7 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 	private float parentwidth;
 
 	private GameObject BackgroundImage;
-	private Vector2 morethan,normal;
+	private Vector2 normal;
 	private float scaletitle=1.5f,equalsL;
 
 	//底部菜单的高度
@@ -60,6 +60,8 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 	private Vector3[] destinations;
 
 	private int nowpanle;
+
+
 
 	void Start ()
 	{
@@ -95,7 +97,6 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 
 
 		//不使用Gridlayout初始化bottompanel子物体
-		equalsL = (bottompanel.GetComponent<RectTransform> ().rect.width) / (4 + scaletitle);
 		toggles = new Toggle[bottompanel.transform.childCount-1];
 		for (int i = 0; i < bottompanel.transform.childCount; i++)
 		{
@@ -106,16 +107,14 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 				itemschange change=toggles[i].gameObject.AddComponent<itemschange> ();
 				change.uimanager = this;
 				toggles[i].onValueChanged.AddListener (OnToggle);
-
 			}
-
 		}
-
+		equalsL = (bottompanel.GetComponent<RectTransform> ().rect.width) / (toggles.Length - 1 + scaletitle);
 		//初始化字典：
-		for (int i = 0; i <  toggles.Length; i++)
-		{
-			panel_toggle.Add (toggles[i].gameObject,Panel_show10.transform.GetChild(i).gameObject);
-		}
+//		for (int i = 0; i <  toggles.Length; i++)
+//		{
+//			panel_toggle.Add (toggles[i].gameObject,Panel_show10.transform.GetChild(i).gameObject);
+//		}
 
 		//初始化状态为选中第三个按钮
 		uimanagertogglechange = togglechange.toggle2;
@@ -128,24 +127,12 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 		templerp =new Vector3(-destinations [currentpanel].x,destinations[currentpanel].y,0f);
 		current=toggles[currentpanel].gameObject;
 		nowpanle = currentpanel;
-	}
 
-	void LateUpdate()
-	{
-		if (!isdrag) {
-			Panel_show10.transform.localPosition = Vector3.Lerp (
-				Panel_show10.transform.localPosition,
-				templerp, lerptimer);
-		}
-	}
-
-	public void Bottomitems(GameObject presed,Vector2 morethan)
-	{
 		//修改位置及宽度
 		for (int i = 0; i < toggles.Length; i++) 
 		{
 			//先修改大小
-			if (presed.name.Equals (toggles [i].name)) {
+			if (i==currentpanel) {
 				toggles [i].GetComponent<RectTransform> ().sizeDelta = Vector2.Lerp(toggles [i].GetComponent<RectTransform> ().sizeDelta
 					, new Vector2 (scaletitle * equalsL,BottomItemsHigh),lerptimer);
 			} else {
@@ -161,9 +148,22 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 			}
 		}
 		//修改bottompanel的items背景位置
-		BackgroundImage.transform.localPosition=Vector3.Lerp(BackgroundImage.transform.localPosition,presed.transform.localPosition,lerptimer);
-
+		//BackgroundImage.transform.SetParent(bottompanel.transform);
+		BackgroundImage.transform.localPosition=Vector3.Lerp(BackgroundImage.transform.localPosition,toggles[currentpanel].transform.localPosition,lerptimer);
 	}
+
+	void LateUpdate()
+	{
+		if (!isdrag) {
+			Panel_show10.transform.localPosition = Vector3.Lerp (
+				Panel_show10.transform.localPosition,
+				templerp, lerptimer);
+		}
+	}
+
+	public void Bottomitems(GameObject presed,Vector2 morethan)
+	{
+		}
 
 
 	public void OnToggle(bool ison)
@@ -179,11 +179,8 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 	public void OnDrag (PointerEventData eventData)
 	{
 		deltaX = eventData.delta.x;
-//		Debug.Log (deltaX);
 		Panel_show10.transform.localPosition +=new Vector3(eventData.delta.x,0f,0f);
 	}
-	int tempnum=3;
-	const int a = 1;
 	/// <summary>
 	/// 弹起时完成剩下动作
 	/// </summary>
@@ -192,7 +189,6 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 	{
 		isdrag = false;
 		Vector3 tempdestination = startpos-eventData.position;
-//		Debug.Log (Vector3.Magnitude(tempdestination)+"/////"+deltaX);
 		if (nowpanle>=0 && nowpanle<=4) {
 			if (deltaX > 10f ||(deltaX > 1f&& Vector3.Distance(startpos,eventData.position)>300f)) {
 				nowpanle --;
@@ -203,8 +199,6 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 		}
 
 
-	//	Bottomitems (toggles[tempnum].gameObject,morethan);
-//		Debug.Log (nowpanle+"-----"+deltaX);
 		switch (nowpanle) 
 		{
 
@@ -253,26 +247,74 @@ public class UImanager : MonoBehaviour,IDragHandler,IPointerDownHandler,IPointer
 			}
 			break;
 		case togglechange.toggle0:
-			Bottomitems (toggles[0].gameObject,morethan);
 			LerpPanel (0);
 			break;
 		case togglechange.toggle1:
-			Bottomitems (toggles[1].gameObject,morethan);
 			LerpPanel (1);
 			break;
 		
 		case togglechange.toggle2:
-			Bottomitems (toggles[2].gameObject,morethan);
 			LerpPanel (2);
 			break;
 		case togglechange.toggle3:
-			Bottomitems (toggles[3].gameObject,morethan);
 			LerpPanel (3);
 			break;
 		case togglechange.toggle4:
-			Bottomitems (toggles[4].gameObject,morethan);
 			LerpPanel (4);
 			break;
 		}
+
+		//Touch控制拖动
+#if UNITY_ANDRIOD
+		if (Input.touchCount>=1)
+		{
+			if (Input.GetTouch (0).phase == TouchPhase.Began) {
+				Debug.Log ("BeginTouch");
+				isdrag = true;
+				deltaX = 0f;
+				startpos = Input.GetTouch (0).position;
+			}
+			if (Input.GetTouch (0).phase == TouchPhase.Moved) {
+				deltaX = Input.GetTouch (0).position.x;
+				Panel_show10.transform.localPosition += new Vector3 (Input.GetTouch (0).position.x, 0f, 0f);
+			}
+			if (Input.GetTouch (0).phase == TouchPhase.Canceled) {
+				isdrag = false;
+				//	Vector3 tempdestination = startpos - Input.GetTouch (0).position;
+				if (nowpanle >= 0 && nowpanle <= 4) {
+					if (deltaX > 10f || (deltaX > 1f && Vector3.Distance (startpos, Input.GetTouch (0).position) > 300f)) {
+						nowpanle--;
+					} 
+					if (deltaX < -10f || (deltaX < -1f && Vector3.Distance (startpos, Input.GetTouch (0).position) > 300f)) {
+						nowpanle++;
+					} 
+				}
+
+
+				switch (nowpanle) {
+
+				case 0:
+				case -1:
+					uimanagertogglechange = togglechange.toggle0;
+					break;
+				case 1:
+					uimanagertogglechange = togglechange.toggle1;
+					break;
+				case 2:
+					uimanagertogglechange = togglechange.toggle2;
+					break;
+				case 3:
+					uimanagertogglechange = togglechange.toggle3;
+					break;
+				case 4:
+				case 5:
+					uimanagertogglechange = togglechange.toggle4;
+					break;
+				default:
+					break;
+				}
+			}
+		}
+#endif
 	}
 }

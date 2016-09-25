@@ -1,9 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-public class itemschange : MonoBehaviour,IPointerDownHandler {
-
+public class itemschange : MonoBehaviour,IPointerDownHandler,IPointerUpHandler {
+	
 	public UImanager uimanager;
 	public togglechange tchange=togglechange.none;
 
@@ -12,6 +13,14 @@ public class itemschange : MonoBehaviour,IPointerDownHandler {
 		OnStart ();
 	}
 
+	public void OnPointerUp (PointerEventData eventData)
+	{
+		Debug.Log ("OnPointerUp执行");
+		if (this.GetComponentInChildren<Button>()) 
+		{
+			
+		}
+	}
 
 
 
